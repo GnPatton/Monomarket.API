@@ -1,0 +1,1 @@
+dotnet ef dbcontext scaffold "Host=localhost;Database=monomarket;Username=postgres;Password=postgres" Npgsql.EntityFrameworkCore.PostgreSQL -o "./Entities" -c MonomarketDbContext -f -p "./Monomarket.Data"
