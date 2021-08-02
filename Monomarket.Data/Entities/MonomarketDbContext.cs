@@ -8,7 +8,7 @@ namespace Monomarket.Data.Entities
 {
     public partial class MonomarketDbContext : DbContext
     {
-        public MonomarketDbContext()
+        public MonomarketDbContext(DbContextOptions options) : base(options)
         {
         }
 

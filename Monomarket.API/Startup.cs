@@ -2,11 +2,15 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Monomarket.API.Helpers;
+using Monomarket.Business.Services;
+using Monomarket.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,19 +20,41 @@ namespace Monomarket.API
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment, ILogger<Startup> logger)
         {
-            Configuration = configuration;
+            _configuration = configuration;
+            _environment = environment;
+
+            if(environment.IsDevelopment())
+            {
+                var builder = new ConfigurationBuilder()
+                    .SetBasePath(environment.ContentRootPath)
+                    .AddJsonFile("appsettings.json",
+                    optional: false,
+                    reloadOnChange: true)
+                    .AddEnvironmentVariables();
+
+                builder.AddUserSecrets<Startup>();
+                _configuration = builder.Build();
+            }
         }
 
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            ConfigureOptions(services);
+
+            ConfigureDatabase(services);
 
             services.AddControllers();
-            services.AddSwaggerGen(c =>
+            
+            services.AddMonoServices()
+            .AddMonoRepositories()
+            .AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Monomarket.API", Version = "v1" });
             });
@@ -41,7 +67,8 @@ namespace Monomarket.API
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Monomarket.API v1"));
+                app.UseSwaggerUI(_ => 
+                _.SwaggerEndpoint($"/swagger/{_configuration["ApiCurrentVersion"]}/swagger.json", "Monomarket.API"));
             }
 
             app.UseHttpsRedirection();
@@ -52,8 +79,18 @@ namespace Monomarket.API
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
+                endpoints.MapDefaultControllerRoute();
             });
+        }
+
+        private void ConfigureOptions(IServiceCollection services)
+        {
+            
+        }
+
+        protected virtual void ConfigureDatabase(IServiceCollection services)
+        {
+            services.AddDbContext<MonoDbContext>(options => options.UseNpgsql(_configuration.GetConnectionString("MonoDb")));
         }
     }
 }

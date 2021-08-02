@@ -8,7 +8,7 @@ namespace Monomarket.DataAccess
 {
     public static class DataAccessExtension
     {
-        public static IServiceCollection AddMonomarketRepositories(this IServiceCollection self)
+        public static IServiceCollection AddMonoRepositories(this IServiceCollection self)
         {
             self.AddScoped<IUnitOfWork, UnitOfWork>();
 

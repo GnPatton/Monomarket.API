@@ -12,8 +12,15 @@ CREATE TABLE IF NOT EXISTS migration (
 	"source" VARCHAR(150) 
 );
 
-CREATE TABLE "user" (
-    user_id             INTEGER NOT NULL,
+CREATE SEQUENCE IF NOT EXISTS public.user_id_user
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 0
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE IF NOT EXISTS "user" (
+    user_id        INTEGER DEFAULT nextval('public.user_id_user'::regclass) NOT NULL,
     first_name     VARCHAR(50) NOT NULL,
     last_name      VARCHAR(50) NOT NULL,
     date_of_birth  DATE NOT NULL,
@@ -24,7 +31,7 @@ CREATE TABLE "user" (
 	CONSTRAINT pk_user_id PRIMARY KEY ( user_id )
 );
 
-CREATE TABLE user_credentials (
+CREATE TABLE IF NOT EXISTS user_credentials (
     user_credentials_id INTEGER NOT NULL,
     email     VARCHAR(50) NOT NULL,
     password  VARCHAR(50) NOT NULL,
